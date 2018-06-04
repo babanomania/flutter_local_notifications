@@ -2,8 +2,10 @@ package com.dexterous.flutterlocalnotifications;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
-
+import android.util.Log;
 import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,11 +27,15 @@ public class ScheduledNotificationReceiver extends BroadcastReceiver {
         boolean repeat = intent.getBooleanExtra(FlutterLocalNotificationsPlugin.REPEAT, false);
 
         if (repeat) {
+            
             Long repeatTillMS =  intent.getLongExtra( FlutterLocalNotificationsPlugin.REPEAT_TILL, -1L );
+            
             if( repeatTillMS != -1L ){
+
                 Date endDate = new Date( repeatTillMS );
                 Date currentTime = new Date( GregorianCalendar.getInstance().getTimeInMillis() );
-                if( endDate.after( currentTime ) ){
+                
+                if( currentTime.after( endDate ) ){
 
                     PendingIntent pendingIntent = PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                     AlarmManager alarmManager = getAlarmManager(context);
@@ -38,10 +44,16 @@ public class ScheduledNotificationReceiver extends BroadcastReceiver {
                     FlutterLocalNotificationsPlugin.removeNotificationFromCache(notificationId, context);
                 }
             }
+
             return;
         }
 
         FlutterLocalNotificationsPlugin.removeNotificationFromCache(notificationId, context);
+    }
+
+    private static AlarmManager getAlarmManager(Context context) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        return alarmManager;
     }
 
 }
